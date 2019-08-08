@@ -47,7 +47,8 @@ class TJMP(Statement):
 
     def do(self, interp_state):
         if interp_state.T:
-            interp_state = interp_state[labels[self._label]]
+            label_address = interp_state.labels[self._label]
+            interp_state.next_statement = label_address
         else:
             interp_state.next_statement += 1
 
