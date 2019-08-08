@@ -1,6 +1,8 @@
 COPY 70 X
 ADDI X 1 X
 
+MARK foo
+
 COPY 3 T
 
 MULI T X T
