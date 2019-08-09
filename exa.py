@@ -49,7 +49,7 @@ class TJMP(Statement):
 
     def do(self, interp_state):
         if interp_state.T:
-            label_address = interp_state.labels[self._label]
+            label_address = interp_state.get_label(self._label, self._line_num)
             interp_state.next_statement = label_address
         else:
             interp_state.next_statement += 1
@@ -67,7 +67,7 @@ class FJMP(Statement):
         if interp_state.T:
             interp_state.next_statement += 1
         else:
-            label_address = interp_state.labels[self._label]
+            label_address = interp_state.get_label(self._label, self._line_num)
             interp_state.next_statement = label_address
 
 
@@ -216,6 +216,12 @@ class InterpreterState:
             raise RuntimeError('Duplicate mark {} on line {}'.format(
                 line_num, label))
         self.labels[label] = stmt_num
+
+    def get_label(self, label, line_num):
+        if label not in self.labels:
+            raise ValueError('Invalid label {} in jump on line {}'.format(
+                label, line_num))
+        return self.labels[label]
 
     def get_value(self, val):
         if val == 'X':
