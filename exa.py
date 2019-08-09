@@ -79,18 +79,8 @@ class COPY(Statement):
         self._to = tokens[2]
 
     def do(self, interp_state):
-        try:
-            _from = interp_state.get_value(self._from)
-        except TypeError:
-            raise RuntimeError('Invalid address {} on line {}'.format(
-                self._from, self._line_num))
-
-        try:
-            interp_state.store(self._to, _from)
-        except ValueError as err:
-            raise RuntimeError('Invalid target address {} on line {}'.format(
-                self._to, self._line_num))
-
+        _from = interp_state.get_value(self._from, self._line_num)
+        interp_state.store(self._to, _from, self._line_num)
         interp_state.next_statement += 1
 
 
@@ -105,24 +95,9 @@ class MathStatement(Statement):
         self._to = tokens[3]
 
     def do(self, interp_state):
-        try:
-            a = interp_state.get_value(self._a)
-        except TypeError:
-            raise RuntimeError('Invalid input value {} on line {}'.format(
-                self._a, self._line_num))
-
-        try:
-            b = interp_state.get_value(self._b)
-        except TypeError:
-            raise RuntimeError('Invalid input value {} on line {}'.format(
-                self._b, self._line_num))
-
-        try:
-            interp_state.store(self._to, self.compute(a, b))
-        except ValueError as err:
-            raise RuntimeError('Invalid target address {} on line {}'.format(
-                self._to, self._line_num))
-
+        a = interp_state.get_value(self._a, self._line_num)
+        b = interp_state.get_value(self._b, self._line_num)
+        interp_state.store(self._to, self.compute(a, b), self._line_num)
         interp_state.next_statement += 1
 
 
@@ -143,17 +118,8 @@ class TEST(Statement):
         self._b = tokens[3]
 
     def do(self, interp_state):
-        try:
-            a = interp_state.get_value(self._a)
-        except TypeError:
-            raise RuntimeError('Invalid input value {} on line {}'.format(
-                self._a, self._line_num))
-
-        try:
-            b = interp_state.get_value(self._b)
-        except TypeError:
-            raise RuntimeError('Invalid input value {} on line {}'.format(
-                self._b, self._line_num))
+        a = interp_state.get_value(self._a, self._line_num)
+        b = interp_state.get_value(self._b, self._line_num)
 
         try:
             op_func = self._op_funcs[self._op]
@@ -162,9 +128,9 @@ class TEST(Statement):
                 self._op, self._line_num))
 
         if op_func(a, b):
-            interp_state.store('T', 1)
+            interp_state.store('T', 1, self._line_num)
         else:
-            interp_state.store('T', 0)
+            interp_state.store('T', 0, self._line_num)
 
         interp_state.next_statement += 1
 
@@ -211,11 +177,11 @@ class InterpreterState:
 
     @property
     def T(self):
-        return self.get_value('T')
+        return self._registers['T']
 
     @property
     def X(self):
-        return self.get_value('X')
+        return self._registers['X']
 
     def __str__(self):
         return 'X={:4} T={:4} next={:4}'.format(
@@ -233,17 +199,22 @@ class InterpreterState:
                 label, line_num))
         return self.labels[label]
 
-    def get_value(self, val):
+    def get_value(self, val, line_num):
         if val in self._registers:
             return self._registers[val]
         else:
-            return int(val)
+            try:
+                return int(val)
+            except TypeError:
+                raise RuntimeError('Invalid input value {} on line {}'.format(
+                    val, line_num))
 
-    def store(self, loc, val):
+    def store(self, loc, val, line_num):
         if loc in self._registers:
             self._registers[loc] = val
         else:
-            raise ValueError('Invalid location {}'.format(loc))
+            raise RuntimeError('Invalid storage address {} on line {}'.format(
+                loc, line_num))
 
 
 class Interpreter:
