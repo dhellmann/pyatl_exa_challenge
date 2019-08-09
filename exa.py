@@ -8,17 +8,17 @@ class Statement:
 
     _expected_args = 3
 
-    def __init__(self, line_num, statement):
-        if len(statement) != self._expected_args:
+    def __init__(self, line_num, tokens):
+        if len(tokens) != self._expected_args:
             raise RuntimeError('Expected {} arguments to {} on line {}: {}'.format(
-                self._expected_args, statement[0], line_num, statement))
+                self._expected_args, tokens[0], line_num, tokens))
         self._line_num = line_num
-        self._stmt = statement
+        self._tokens = tokens
 
     def __str__(self):
         return '{} {}'.format(
             self._line_num,
-            ' '.join(self._stmt),
+            ' '.join(self._tokens),
         )
 
     def do(self, interp_state):
@@ -30,9 +30,9 @@ class MARK(Statement):
 
     _expected_args = 2
 
-    def __init__(self, line_num, statement):
-        super().__init__(line_num, statement)
-        self._label = statement[1]
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._label = tokens[1]
 
     def do(self, interp_state):
         interp_state.next_statement += 1
@@ -42,9 +42,9 @@ class TJMP(Statement):
 
     _expected_args = 2
 
-    def __init__(self, line_num, statement):
-        super().__init__(line_num, statement)
-        self._label = statement[1]
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._label = tokens[1]
 
     def do(self, interp_state):
         if interp_state.T:
@@ -56,10 +56,10 @@ class TJMP(Statement):
 
 class COPY(Statement):
 
-    def __init__(self, line_num, statement):
-        super().__init__(line_num, statement)
-        self._from = statement[1]
-        self._to = statement[2]
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._from = tokens[1]
+        self._to = tokens[2]
 
     def do(self, interp_state):
         try:
@@ -81,11 +81,11 @@ class MathStatement(Statement):
 
     _expected_args = 4
 
-    def __init__(self, line_num, statement):
-        super().__init__(line_num, statement)
-        self._a = statement[1]
-        self._b = statement[2]
-        self._to = statement[3]
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._a = tokens[1]
+        self._b = tokens[2]
+        self._to = tokens[3]
 
     def do(self, interp_state):
         try:
@@ -119,11 +119,11 @@ class TEST(Statement):
         '=': operator.eq,
     }
 
-    def __init__(self, line_num, statement):
-        super().__init__(line_num, statement)
-        self._a = statement[1]
-        self._op = statement[2]
-        self._b = statement[3]
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._a = tokens[1]
+        self._op = tokens[2]
+        self._b = tokens[3]
 
     def do(self, interp_state):
         try:
@@ -242,7 +242,7 @@ class Interpreter:
 
     def parse(self, statements):
         # eliminate blank lines
-        statements = [
+        tokenized = [
             (ln, stmt.strip().split())
             for ln, stmt in enumerate(statements)
             if stmt.strip()
@@ -251,20 +251,20 @@ class Interpreter:
         # build commands and collect marks
         labels = {}
         program = []
-        for i, (ln, stmt) in enumerate(statements):
-            if stmt[0] == 'MARK':
+        for i, (ln, tokens) in enumerate(tokenized):
+            if tokens[0] == 'MARK':
                 try:
-                    label = stmt[1]
+                    label = tokens[1]
                 except IndexError:
                     raise RuntimeError('Invalid MARK statement on line {}'.format(ln))
                 if label in labels:
                     raise RuntimeError('Duplicate mark {} on line {}'.format(ln, label))
                 labels[label] = i
             try:
-                factory = self._commands[stmt[0]]
+                factory = self._commands[tokens[0]]
             except KeyError:
-                raise RuntimeError('Unknown statement on line {}: {}'.format(stmt, ln))
-            program.append(factory(ln, stmt))
+                raise RuntimeError('Unknown statement on line {}: {}'.format(tokens, ln))
+            program.append(factory(ln, tokens))
 
         return program, labels
 
