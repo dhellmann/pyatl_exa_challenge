@@ -214,6 +214,21 @@ class FILE(Statement):
 
     def do(self, interp_state):
         interp_state.store(self._to, interp_state.current_file_id)
+        interp_state.next_statement += 1
+
+
+class SEEK(Statement):
+
+    _expected_args = 2
+
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
+        self._offset = tokens[1]
+
+    def do(self, interp_state):
+        offset = interp_state.get_value(self._offset, self._line_num)
+        interp_state.seek(offset, self._line_num)
+        interp_state.next_statement += 1
 
 
 class File:
@@ -226,6 +241,14 @@ class File:
 
     def at_eof(self):
         return (self._cursor + 1) > len(self._content)
+
+    def seek(self, offset):
+        dest = self._cursor + offset
+        if dest < 0:
+            dest = 0
+        if (dest + 1) > len(self._content):
+            dest = len(self._content)
+        self._cursor = dest
 
     def read(self, line_num):
         # Check for reading past the end of the file by checking that
@@ -334,6 +357,12 @@ class InterpreterState:
         self._current_file = None
         self.current_file_id = None
 
+    def seek(self, offset, line_num):
+        if not self._current_file:
+            raise RuntimeError('Seeked when no file was open on line {}'.format(
+                line_num))
+        self._current_file.seek(offset)
+
     def get_files(self):
         return self._files
 
@@ -358,6 +387,7 @@ class Interpreter:
         'FILE': FILE,
         'GRAB': GRAB,
         'DROP': DROP,
+        'SEEK': SEEK,
     }
 
     def __init__(self, output):
