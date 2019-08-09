@@ -1,0 +1,7 @@
+COPY 1 X
+COPY 7 T
+MARK LOOP
+MULI T X X
+SUBI T 1 T
+TJMP LOOP
+# This effectively calculates 7! (factorial of 7), which should be 5040.
