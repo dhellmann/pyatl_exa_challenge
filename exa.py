@@ -204,7 +204,10 @@ class InterpreterState:
             return self._registers[val]
         else:
             try:
-                return int(val)
+                vali = int(val)
+                if not (-9999 <= vali <= 9999):
+                    raise RuntimeError(
+                        'Integer {} out of range [-9999, 9999]'.format(vali))
             except TypeError:
                 raise RuntimeError('Invalid input value {} on line {}'.format(
                     val, line_num))
