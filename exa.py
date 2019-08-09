@@ -258,11 +258,11 @@ class Interpreter:
         return state
 
     def parse(self, statements):
-        # eliminate blank lines
+        # eliminate blank lines and comments
         tokenized = [
             (ln, stmt.strip().split())
-            for ln, stmt in enumerate(statements)
-            if stmt.strip()
+            for ln, stmt in enumerate(line.strip() for line in statements)
+            if stmt and not stmt.startswith('#')
         ]
 
         # build commands and collect marks
