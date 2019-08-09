@@ -17,7 +17,7 @@ class Statement:
         self._tokens = tokens
 
     def __str__(self):
-        return '{} {}'.format(
+        return '{:3} {}'.format(
             self._line_num,
             ' '.join(self._tokens),
         )
