@@ -207,7 +207,7 @@ class InterpreterState:
         self.labels = labels
 
     def __str__(self):
-        return 'X= {:4} T= {:4} next= {:4}'.format(
+        return 'X={:4} T={:4} next={:4}'.format(
             self.X, self.T, self.next_statement)
 
     def get_value(self, val):
@@ -242,6 +242,9 @@ class Interpreter:
         'TEST': TEST,
     }
 
+    def __init__(self, output):
+        self.output = output
+
     def run(self, statements):
         program, labels = self.parse(statements)
         state = InterpreterState(labels)
@@ -253,7 +256,7 @@ class Interpreter:
 
             stmt = program[state.next_statement]
             stmt.do(state)
-            print('{:30} {}'.format(str(stmt), state))
+            self.output('{:30} {}'.format(str(stmt), state))
 
         return state
 
@@ -289,11 +292,20 @@ class Interpreter:
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('file')
+    p.add_argument('-v', dest='verbose', action='store_true', default=True)
+    p.add_argument('-q', dest='verbose', action='store_false')
     args = p.parse_args()
 
     with open(args.file, 'r') as f:
         statements = f.readlines()
 
-    interp = Interpreter()
+    def output(message):
+        if args.verbose:
+            print(message)
+
+    interp = Interpreter(output)
     result = interp.run(statements)
-    print('FINAL:', result)
+    if args.verbose:
+        print('FINAL:', result)
+    else:
+        print('X={:4} T={:4}'.format(result.X, result.T))
