@@ -121,6 +121,18 @@ class MULI(MathStatement):
         return a * b
 
 
+class DIVI(MathStatement):
+
+    def compute(self, a, b):
+        return a // b
+
+
+class MODI(MathStatement):
+
+    def compute(self, a, b):
+        return a % b
+
+
 class SUBI(MathStatement):
 
     def compute(self, a, b):
@@ -162,6 +174,8 @@ class Interpreter:
         'COPY': COPY,
         'ADDI': ADDI,
         'MULI': MULI,
+        'DIVI': DIVI,
+        'MODI': MODI,
         'SUBI': SUBI,
         'MARK': MARK,
         'TJMP': TJMP,
