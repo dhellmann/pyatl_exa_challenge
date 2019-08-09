@@ -72,6 +72,19 @@ class FJMP(Statement):
             interp_state.next_statement = label_address
 
 
+class JUMP(Statement):
+
+    _expected_args = 2
+
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
+        self._label = tokens[1]
+
+    def do(self, interp_state):
+        label_address = interp_state.get_label(self._label, self._line_num)
+        interp_state.next_statement = label_address
+
+
 class COPY(Statement):
 
     def __init__(self, line_num, stmt_num, tokens, interp, state):
@@ -379,6 +392,7 @@ class Interpreter:
         'SUBI': SUBI,
 
         'MARK': MARK,
+        'JUMP': JUMP,
 
         'TEST': TEST,
         'TJMP': TJMP,
