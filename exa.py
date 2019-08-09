@@ -202,10 +202,20 @@ class SUBI(MathStatement):
 class InterpreterState:
 
     def __init__(self):
-        self.T = 0
-        self.X = 0
+        self._registers = {
+            'T': 0,
+            'X': 0,
+        }
         self.next_statement = 0
         self.labels = {}
+
+    @property
+    def T(self):
+        return self.get_value('T')
+
+    @property
+    def X(self):
+        return self.get_value('X')
 
     def __str__(self):
         return 'X={:4} T={:4} next={:4}'.format(
@@ -224,18 +234,14 @@ class InterpreterState:
         return self.labels[label]
 
     def get_value(self, val):
-        if val == 'X':
-            return self.X
-        elif val == 'T':
-            return self.T
+        if val in self._registers:
+            return self._registers[val]
         else:
             return int(val)
 
     def store(self, loc, val):
-        if loc == 'X':
-            self.X = val
-        elif loc == 'T':
-            self.T = val
+        if loc in self._registers:
+            self._registers[loc] = val
         else:
             raise ValueError('Invalid location {}'.format(loc))
 
