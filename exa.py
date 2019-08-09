@@ -98,23 +98,6 @@ class COPY(Statement):
         interp_state.next_statement += 1
 
 
-class MathStatement(Statement):
-
-    _expected_args = 4
-
-    def __init__(self, line_num, stmt_num, tokens, interp, state):
-        super().__init__(line_num, stmt_num, tokens, interp, state)
-        self._a = tokens[1]
-        self._b = tokens[2]
-        self._to = tokens[3]
-
-    def do(self, interp_state):
-        a = interp_state.get_value(self._a, self._line_num)
-        b = interp_state.get_value(self._b, self._line_num)
-        interp_state.store(self._to, self.compute(a, b), self._line_num)
-        interp_state.next_statement += 1
-
-
 class TEST(Statement):
 
     _op_funcs = {
@@ -161,6 +144,23 @@ class TEST(Statement):
                 result = 0
 
         interp_state.store('T', result, self._line_num)
+        interp_state.next_statement += 1
+
+
+class MathStatement(Statement):
+
+    _expected_args = 4
+
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
+        self._a = tokens[1]
+        self._b = tokens[2]
+        self._to = tokens[3]
+
+    def do(self, interp_state):
+        a = interp_state.get_value(self._a, self._line_num)
+        b = interp_state.get_value(self._b, self._line_num)
+        interp_state.store(self._to, self.compute(a, b), self._line_num)
         interp_state.next_statement += 1
 
 
@@ -470,6 +470,7 @@ if __name__ == '__main__':
             print(message)
 
     interp = Interpreter(output)
+
     for filename in args.files:
         try:
             file_id = int(os.path.basename(filename))
@@ -478,7 +479,9 @@ if __name__ == '__main__':
                 filename))
         with open(filename, 'r') as f:
             interp.load_data_file(file_id, f)
+
     result = interp.run(statements)
+
     if args.verbose:
         print('FINAL:', result)
     else:
