@@ -54,6 +54,22 @@ class TJMP(Statement):
             interp_state.next_statement += 1
 
 
+class FJMP(Statement):
+
+    _expected_args = 2
+
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._label = tokens[1]
+
+    def do(self, interp_state):
+        if interp_state.T:
+            interp_state.next_statement += 1
+        else:
+            label_address = interp_state.labels[self._label]
+            interp_state.next_statement = label_address
+
+
 class COPY(Statement):
 
     def __init__(self, line_num, tokens):
@@ -222,6 +238,7 @@ class Interpreter:
         'SUBI': SUBI,
         'MARK': MARK,
         'TJMP': TJMP,
+        'FJMP': FJMP,
         'TEST': TEST,
     }
 
