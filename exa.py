@@ -8,7 +8,7 @@ class Statement:
 
     _expected_args = 3
 
-    def __init__(self, line_num, tokens):
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
         if len(tokens) != self._expected_args:
             raise RuntimeError('Expected {} arguments to {} on line {}: {}'.format(
                 self._expected_args, tokens[0], line_num, tokens))
@@ -30,9 +30,10 @@ class MARK(Statement):
 
     _expected_args = 2
 
-    def __init__(self, line_num, tokens):
-        super().__init__(line_num, tokens)
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
         self._label = tokens[1]
+        state.add_label(self._label, stmt_num, line_num)
 
     def do(self, interp_state):
         interp_state.next_statement += 1
@@ -42,8 +43,8 @@ class TJMP(Statement):
 
     _expected_args = 2
 
-    def __init__(self, line_num, tokens):
-        super().__init__(line_num, tokens)
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
         self._label = tokens[1]
 
     def do(self, interp_state):
@@ -58,8 +59,8 @@ class FJMP(Statement):
 
     _expected_args = 2
 
-    def __init__(self, line_num, tokens):
-        super().__init__(line_num, tokens)
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
         self._label = tokens[1]
 
     def do(self, interp_state):
@@ -72,8 +73,8 @@ class FJMP(Statement):
 
 class COPY(Statement):
 
-    def __init__(self, line_num, tokens):
-        super().__init__(line_num, tokens)
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
         self._from = tokens[1]
         self._to = tokens[2]
 
@@ -97,8 +98,8 @@ class MathStatement(Statement):
 
     _expected_args = 4
 
-    def __init__(self, line_num, tokens):
-        super().__init__(line_num, tokens)
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
         self._a = tokens[1]
         self._b = tokens[2]
         self._to = tokens[3]
@@ -135,8 +136,8 @@ class TEST(Statement):
         '=': operator.eq,
     }
 
-    def __init__(self, line_num, tokens):
-        super().__init__(line_num, tokens)
+    def __init__(self, line_num, stmt_num, tokens, interp, state):
+        super().__init__(line_num, stmt_num, tokens, interp, state)
         self._a = tokens[1]
         self._op = tokens[2]
         self._b = tokens[3]
@@ -200,15 +201,21 @@ class SUBI(MathStatement):
 
 class InterpreterState:
 
-    def __init__(self, labels):
+    def __init__(self):
         self.T = 0
         self.X = 0
         self.next_statement = 0
-        self.labels = labels
+        self.labels = {}
 
     def __str__(self):
         return 'X={:4} T={:4} next={:4}'.format(
             self.X, self.T, self.next_statement)
+
+    def add_label(self, label, stmt_num, line_num):
+        if label in self.labels:
+            raise RuntimeError('Duplicate mark {} on line {}'.format(
+                line_num, label))
+        self.labels[label] = stmt_num
 
     def get_value(self, val):
         if val == 'X':
@@ -246,8 +253,8 @@ class Interpreter:
         self.output = output
 
     def run(self, statements):
-        program, labels = self.parse(statements)
-        state = InterpreterState(labels)
+        state = InterpreterState()
+        program = self.parse(statements, state)
 
         while True:
             if state.next_statement >= len(program):
@@ -260,8 +267,9 @@ class Interpreter:
 
         return state
 
-    def parse(self, statements):
-        # eliminate blank lines and comments
+    def parse(self, statements, state):
+        # clean up extra white space, eliminate blank lines, ignore
+        # comments, and parse each line into tokens
         tokenized = [
             (ln, stmt.strip().split())
             for ln, stmt in enumerate(line.strip() for line in statements)
@@ -269,24 +277,15 @@ class Interpreter:
         ]
 
         # build commands and collect marks
-        labels = {}
         program = []
-        for i, (ln, tokens) in enumerate(tokenized):
-            if tokens[0] == 'MARK':
-                try:
-                    label = tokens[1]
-                except IndexError:
-                    raise RuntimeError('Invalid MARK statement on line {}'.format(ln))
-                if label in labels:
-                    raise RuntimeError('Duplicate mark {} on line {}'.format(ln, label))
-                labels[label] = i
+        for sn, (ln, tokens) in enumerate(tokenized):
             try:
                 factory = self._commands[tokens[0]]
             except KeyError:
                 raise RuntimeError('Unknown statement on line {}: {}'.format(tokens, ln))
-            program.append(factory(ln, tokens))
+            program.append(factory(ln, sn, tokens, self, state))
 
-        return program, labels
+        return program
 
 
 if __name__ == '__main__':
