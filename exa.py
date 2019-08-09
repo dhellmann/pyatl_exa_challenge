@@ -54,6 +54,22 @@ class TJMP(Statement):
             interp_state.next_statement += 1
 
 
+class JUMP(Statement):
+
+    _expected_args = 2
+
+    def __init__(self, line_num, tokens):
+        super().__init__(line_num, tokens)
+        self._label = tokens[1]
+
+    def do(self, interp_state):
+        try:
+            label_address = interp_state.labels[self._label]
+            interp_state.next_statement = label_address
+        except KeyError as err:
+            raise ValueError('Invalid label: {}'.format(self._label))
+
+
 class FJMP(Statement):
 
     _expected_args = 2
@@ -125,6 +141,36 @@ class MathStatement(Statement):
         interp_state.next_statement += 1
 
 
+class ADDI(MathStatement):
+
+    def compute(self, a, b):
+        return a + b
+
+
+class MULI(MathStatement):
+
+    def compute(self, a, b):
+        return a * b
+
+
+class DIVI(MathStatement):
+
+    def compute(self, a, b):
+        return a // b
+
+
+class MODI(MathStatement):
+
+    def compute(self, a, b):
+        return a % b
+
+
+class SUBI(MathStatement):
+
+    def compute(self, a, b):
+        return a - b
+
+
 class TEST(Statement):
 
     _expected_args = 4
@@ -168,36 +214,6 @@ class TEST(Statement):
         interp_state.next_statement += 1
 
 
-class ADDI(MathStatement):
-
-    def compute(self, a, b):
-        return a + b
-
-
-class MULI(MathStatement):
-
-    def compute(self, a, b):
-        return a * b
-
-
-class DIVI(MathStatement):
-
-    def compute(self, a, b):
-        return a // b
-
-
-class MODI(MathStatement):
-
-    def compute(self, a, b):
-        return a % b
-
-
-class SUBI(MathStatement):
-
-    def compute(self, a, b):
-        return a - b
-
-
 class InterpreterState:
 
     def __init__(self, labels):
@@ -237,6 +253,7 @@ class Interpreter:
         'MODI': MODI,
         'SUBI': SUBI,
         'MARK': MARK,
+        'JUMP': JUMP,
         'TJMP': TJMP,
         'FJMP': FJMP,
         'TEST': TEST,
@@ -273,14 +290,17 @@ class Interpreter:
                 try:
                     label = tokens[1]
                 except IndexError:
-                    raise RuntimeError('Invalid MARK statement on line {}'.format(ln))
+                    raise RuntimeError(
+                        'Invalid MARK statement on line {}'.format(ln))
                 if label in labels:
-                    raise RuntimeError('Duplicate mark {} on line {}'.format(ln, label))
+                    raise RuntimeError(
+                        'Duplicate mark {} on line {}'.format(ln, label))
                 labels[label] = i
             try:
                 factory = self._commands[tokens[0]]
             except KeyError:
-                raise RuntimeError('Unknown statement on line {}: {}'.format(tokens, ln))
+                raise RuntimeError(
+                    'Unknown statement on line {}: {}'.format(tokens, ln))
             program.append(factory(ln, tokens))
 
         return program, labels
@@ -293,7 +313,6 @@ if __name__ == '__main__':
 
     with open(args.file, 'r') as f:
         statements = f.readlines()
-
     interp = Interpreter()
     result = interp.run(statements)
     print('FINAL:', result)
