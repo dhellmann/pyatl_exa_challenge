@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import operator
 
 
 class Statement:
@@ -108,6 +109,48 @@ class MathStatement(Statement):
         interp_state.next_statement += 1
 
 
+class TEST(Statement):
+
+    _expected_args = 4
+
+    _op_funcs = {
+        '>': operator.gt,
+        '<': operator.lt,
+        '=': operator.eq,
+    }
+
+    def __init__(self, line_num, statement):
+        super().__init__(line_num, statement)
+        self._a = statement[1]
+        self._op = statement[2]
+        self._b = statement[3]
+
+    def do(self, interp_state):
+        try:
+            a = interp_state.get_value(self._a)
+        except TypeError:
+            raise RuntimeError('Invalid input value {} on line {}'.format(
+                self._a, self._line_num))
+
+        try:
+            b = interp_state.get_value(self._b)
+        except TypeError:
+            raise RuntimeError('Invalid input value {} on line {}'.format(
+                self._b, self._line_num))
+
+        try:
+            op_func = self._op_funcs[self._op]
+        except KeyError:
+            raise RuntimeError('Unknown operator {} on line {}'.format(
+                self._op, self._line_num))
+
+        if op_func(a, b):
+            interp_state.store('T', 1)
+        else:
+            interp_state.store('T', 0)
+
+        interp_state.next_statement += 1
+
 
 class ADDI(MathStatement):
 
@@ -179,6 +222,7 @@ class Interpreter:
         'SUBI': SUBI,
         'MARK': MARK,
         'TJMP': TJMP,
+        'TEST': TEST,
     }
 
     def run(self, statements):
