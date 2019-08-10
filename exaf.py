@@ -241,6 +241,14 @@ def run_statement(line_num, statement, program_counter, registers, labels, file_
         file_id = None
         program_counter += 1
 
+    elif cmd == 'SEEK':
+        current_file = files.get(file_id)
+        if not current_file:
+            raise RuntimeError('No open file')
+        offset = get_rn(statement[1], registers, current_file)
+        current_file.seek(offset)
+        program_counter += 1
+
     else:
         raise NotImplementedError(cmd)
     return program_counter, registers, file_id
