@@ -17,7 +17,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	program, err := exa.Load(programName)
+	fd, err := os.Open(programName)
+	defer fd.Close()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not open program file: %s\n", err)
+		os.Exit(2)
+	}
+
+	program, err := exa.Load(fd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not load program: %s\n", err)
 		os.Exit(2)

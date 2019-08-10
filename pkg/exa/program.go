@@ -3,7 +3,7 @@ package exa
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
@@ -18,13 +18,7 @@ type Program struct {
 
 // Load reads the contents of a file and creates a Program and returns
 // it with a mapping of any labels that have been marked.
-func Load(filename string) (*Program, error) {
-
-	fd, err := os.Open(filename)
-	defer fd.Close()
-	if err != nil {
-		return nil, err
-	}
+func Load(fd io.Reader) (*Program, error) {
 
 	program := &Program{
 		labels: map[string]int{},
