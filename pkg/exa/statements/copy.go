@@ -19,6 +19,14 @@ func (*copyStatement) Do(state *interpreter.State) error {
 
 // New builds a copyStatement from the input statement
 func newCopy(input InputStatement) (Statement, error) {
+	err := interpreter.CheckSyntax(
+		[]string{"R/N", "R"},
+		input.Tokens,
+		input.LineNum,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &copyStatement{
 		input: input,
 	}, nil

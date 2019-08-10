@@ -19,6 +19,14 @@ func (*subiStatement) Do(state *interpreter.State) error {
 
 // New builds an subiStatement from the input statement
 func newSubi(input InputStatement) (Statement, error) {
+	err := interpreter.CheckSyntax(
+		[]string{"R/N", "R/N", "R"},
+		input.Tokens,
+		input.LineNum,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &subiStatement{
 		input: input,
 	}, nil

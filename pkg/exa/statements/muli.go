@@ -19,6 +19,14 @@ func (*muliStatement) Do(state *interpreter.State) error {
 
 // New builds an muliStatement from the input statement
 func newMuli(input InputStatement) (Statement, error) {
+	err := interpreter.CheckSyntax(
+		[]string{"R/N", "R/N", "R"},
+		input.Tokens,
+		input.LineNum,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &muliStatement{
 		input: input,
 	}, nil

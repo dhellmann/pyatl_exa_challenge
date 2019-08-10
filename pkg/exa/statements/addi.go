@@ -19,6 +19,14 @@ func (*addiStatement) Do(state *interpreter.State) error {
 
 // New builds an addiStatement from the input statement
 func newAddi(input InputStatement) (Statement, error) {
+	err := interpreter.CheckSyntax(
+		[]string{"R/N", "R/N", "R"},
+		input.Tokens,
+		input.LineNum,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &addiStatement{
 		input: input,
 	}, nil
