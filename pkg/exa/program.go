@@ -1,6 +1,7 @@
 package exa
 
 import (
+	"fmt"
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/statements"
 )
@@ -19,6 +20,7 @@ func (p Program) Run() (*interpreter.State, error) {
 		if err := p[state.Counter].Do(state); err != nil {
 			return nil, err
 		}
+		fmt.Printf("%v\n", state)
 	}
 
 	return state, nil
