@@ -17,7 +17,9 @@ func (p Program) Run() (*interpreter.State, error) {
 		if state.Counter > len(p) {
 			break
 		}
-		if err := p[state.Counter].Do(state); err != nil {
+		nextStatement := p[state.Counter]
+		fmt.Printf("%-20s ", nextStatement)
+		if err := nextStatement.Do(state); err != nil {
 			return nil, err
 		}
 		fmt.Printf("%v\n", state)
