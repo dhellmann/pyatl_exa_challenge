@@ -45,6 +45,7 @@ def parse_program(statements):
         if stmt and not stmt.startswith('#')
     ]
 
+    # check the syntax of all the statements
     for i, (ln, tokens) in enumerate(tokenized):
         cmd = tokens[0]
         if cmd == 'COPY':
@@ -102,7 +103,8 @@ def run_program(program):
 
     while program_counter < len(program):
         line_num, statement = program[program_counter]
-        program_counter, registers = run_statement(line_num, statement, program_counter, registers)
+        program_counter, registers = run_statement(
+            line_num, statement, program_counter, registers)
         print('{:3} {:20} T={:4} X={:4}'.format(
             line_num, ' '.join(statement), registers['T'], registers['X']))
 
