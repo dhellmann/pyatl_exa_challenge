@@ -46,6 +46,9 @@ func CheckSyntax(syntax []string, tokens []string, lineNum int) error {
 					lineNum, i, tok, tokens)
 			}
 
+		case "L":
+			// A label can be anything
+
 		default:
 			return fmt.Errorf("Unknown syntax instruction %q", syn)
 		}

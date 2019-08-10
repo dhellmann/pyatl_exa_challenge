@@ -13,6 +13,7 @@ import (
 // Program is a bunch of statements
 type Program struct {
 	statements []statements.Statement
+	labels     map[string]int
 }
 
 // Load reads the contents of a file and creates a Program and returns
@@ -26,6 +27,7 @@ func Load(filename string) (*Program, error) {
 	}
 
 	program := &Program{
+		labels: map[string]int{},
 	}
 
 	lineNum := 0
@@ -56,6 +58,9 @@ func Load(filename string) (*Program, error) {
 
 		program.statements = append(program.statements, newStatement)
 
+		if inStmt.Tokens[0] == "MARK" {
+			program.labels[inStmt.Tokens[1]] = statementNum
+		}
 
 		statementNum++
 	}
@@ -66,6 +71,7 @@ func Load(filename string) (*Program, error) {
 // Run executes a program and returns the resulting state or any errors
 func (p *Program) Run() (*interpreter.State, error) {
 	state := &interpreter.State{
+		Labels: p.labels,
 	}
 
 	for {

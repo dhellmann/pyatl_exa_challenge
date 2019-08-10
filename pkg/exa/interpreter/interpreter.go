@@ -15,6 +15,10 @@ type State struct {
 
 	// Counter is the program counter
 	Counter int
+
+	// Labels hold the index values for each label in the program
+	// being run
+	Labels map[string]int
 }
 
 func (s *State) String() string {
