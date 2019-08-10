@@ -305,3 +305,8 @@ if __name__ == '__main__':
     program, labels = parse_program(statements)
     results, files = run_program(program, labels, files)
     print('\nT={T:4} X={X:4}'.format(**results))
+
+    for file_id, file_content in sorted(files.items()):
+        print('\nFile: {}'.format(file_id))
+        for i in file_content.get_content():
+            print('  {}'.format(i))
