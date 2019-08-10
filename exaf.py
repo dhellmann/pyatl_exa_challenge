@@ -13,6 +13,7 @@ OPERATORS = {
     'ADDI': operator.add,
     'MULI': operator.mul,
     'SUBI': operator.sub,
+    'MODI': operator.mod,
     '>': operator.gt,
     '<': operator.lt,
     '=': operator.eq,
