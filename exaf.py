@@ -174,7 +174,13 @@ def run_statement(line_num, statement, program_counter, registers, labels, file_
     if cmd == 'COPY':
         src = get_rn(statement[1], registers, files.get(file_id))
         dest = statement[2]
-        registers[dest] = src
+        if dest == 'F':
+            current_file = files.get(file_id)
+            if not current_file:
+                raise RuntimeError('Writing to file before opening on line {}'.format(line_num))
+            current_file.write(src)
+        else:
+            registers[dest] = src
         program_counter += 1
 
     elif cmd in MATH_CMDS:
