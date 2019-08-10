@@ -22,8 +22,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Could not load program: %s\n", err)
 		os.Exit(2)
 	}
-	fmt.Printf("got %d statements\n", len(program))
-	fmt.Printf("%v\n", program)
 	results, err := program.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to run program: %s\n", err)
