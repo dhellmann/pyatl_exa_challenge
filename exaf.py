@@ -5,6 +5,7 @@ import operator
 
 
 MATH_CMDS = set(['ADDI', 'SUBI', 'MULI', 'DIVI', 'MODI'])
+JUMP_CMDS = set(['MARK', 'JUMP', 'TJMP', 'FJMP'])
 
 OPERATORS = {
     'ADDI': operator.add,
@@ -40,6 +41,9 @@ def check_syntax(syntax, line_num, tokens):
                 raise RuntimeError(
                     'Unrecognized operator {} at position {} on line {}, must be one of {}'.format(
                         tok, i, line_num, list(OPERATORS.keys())))
+        elif syn == 'L':
+            # A label can be anything.
+            pass
         else:
             raise RuntimeError('Unknown syntax instruction {}'.format(syn))
 
@@ -53,20 +57,35 @@ def parse_program(statements):
         if stmt and not stmt.startswith('#')
     ]
 
-    # check the syntax of all the statements
+    # check the syntax of all the statements, and record the locations
+    # of the labels
+    labels = {}
     for i, (ln, tokens) in enumerate(tokenized):
         cmd = tokens[0]
+
         if cmd == 'COPY':
             check_syntax(('R/N', 'R'), ln, tokens)
+
         elif cmd in MATH_CMDS:
             check_syntax(('R/N', 'R/N', 'R'), ln, tokens)
+
         elif cmd == 'TEST':
             check_syntax(('R/N', 'OP', 'R/N'), ln, tokens)
+
+        elif cmd in JUMP_CMDS:
+            check_syntax(('L',), ln, tokens)
+            if cmd == 'MARK':
+                label = tokens[1]
+                if label in labels:
+                    raise RuntimeError(
+                        'Duplicate label {} on line {}'.format(label, line_num))
+                labels[label] = i
+
         else:
             raise RuntimeError('Unrecognized command {} on line {}'.format(
                 cmd, ln))
 
-    return tokenized
+    return tokenized, labels
 
 
 def get_rn(val, registers):
@@ -81,7 +100,7 @@ def dupe_registers(registers):
     return new_reg
 
 
-def run_statement(line_num, statement, program_counter, registers):
+def run_statement(line_num, statement, program_counter, registers, labels):
     cmd = statement[0]
     registers = dupe_registers(registers)
 
@@ -109,12 +128,33 @@ def run_statement(line_num, statement, program_counter, registers):
             registers['T'] = 0
         program_counter += 1
 
+    elif cmd == 'JUMP':
+        label = statement[1]
+        program_counter = labels[label]
+
+    elif cmd == 'TJMP':
+        label = statement[1]
+        if registers['T']:
+            program_counter = labels[label]
+        else:
+            program_counter += 1
+
+    elif cmd == 'FJMP':
+        label = statement[1]
+        if not registers['T']:
+            program_counter = labels[label]
+        else:
+            program_counter += 1
+
+    elif cmd == 'MARK':
+        program_counter += 1
+
     else:
         raise NotImplementedError(cmd)
     return program_counter, registers
 
 
-def run_program(program):
+def run_program(program, labels):
     program_counter = 0
     registers = {
         'T': 0,
@@ -124,7 +164,7 @@ def run_program(program):
     while program_counter < len(program):
         line_num, statement = program[program_counter]
         program_counter, registers = run_statement(
-            line_num, statement, program_counter, registers)
+            line_num, statement, program_counter, registers, labels)
         print('{:3} {:20} T={:4} X={:4}'.format(
             line_num, ' '.join(statement), registers['T'], registers['X']))
 
@@ -139,6 +179,6 @@ if __name__ == '__main__':
     with open(args.program, 'r') as f:
         statements = f.readlines()
 
-    program = parse_program(statements)
-    results = run_program(program)
+    program, labels = parse_program(statements)
+    results = run_program(program, labels)
     print('\nT={T:4} X={X:4}'.format(**results))
