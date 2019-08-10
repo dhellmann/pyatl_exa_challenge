@@ -2,10 +2,12 @@
 
 import argparse
 import operator
+import os.path
 
 
 MATH_CMDS = set(['ADDI', 'SUBI', 'MULI', 'DIVI', 'MODI'])
 JUMP_CMDS = set(['MARK', 'JUMP', 'TJMP', 'FJMP'])
+REGISTER_NAMES = 'FTX'
 
 OPERATORS = {
     'ADDI': operator.add,
@@ -17,6 +19,48 @@ OPERATORS = {
 }
 
 
+class File:
+
+    def __init__(self, file_id, initial_data=None):
+        self._id = file_id
+        self._cursor = 0
+        self._content = initial_data or []
+
+    def at_eof(self):
+        return (self._cursor + 1) > len(self._content)
+
+    def seek(self, offset):
+        dest = self._cursor + offset
+        if dest < 0:
+            dest = 0
+        if (dest + 1) > len(self._content):
+            dest = len(self._content)
+        self._cursor = dest
+
+    def read(self):
+        # Check for reading past the end of the file by checking that
+        # there is an item in the array at the current index before
+        # returning it.
+        try:
+            response = self._content[self._cursor]
+        except IndexError:
+            raise RuntimeError('Read past the end of file {} at position {}'.format(
+                self._id, self._cursor))
+        self._cursor += 1
+        return response
+
+    def write(self, val):
+        try:
+            self._content[self._cursor] = val
+            self._cursor += 1
+        except IndexError:
+            self._content.append(val)
+            self._cursor = len(self._content)
+
+    def get_content(self):
+        return self._content
+
+
 def check_syntax(syntax, line_num, tokens):
     if len(syntax) != len(tokens) - 1:
         raise RuntimeError(
@@ -24,7 +68,7 @@ def check_syntax(syntax, line_num, tokens):
             len(syntax), tokens[0], line_num, ' '.join(tokens))
     for i, (syn, tok) in enumerate(zip(syntax, tokens[1:])):
         if syn == 'R':
-            if tok not in 'TX':
+            if tok not in REGISTER_NAMES:
                 raise RuntimeError(
                     'Expected register name, found {} at position {} on line {}'.format(
                         tok, i, line_num))
@@ -32,7 +76,7 @@ def check_syntax(syntax, line_num, tokens):
             try:
                 int(tok)
             except ValueError:
-                if tok not in 'TX':
+                if tok not in REGISTER_NAMES:
                     raise RuntimeError(
                         'Expected register name or integer, found {} at position {} on line {}'.format(
                             tok, i, line_num))
@@ -70,7 +114,13 @@ def parse_program(statements):
             check_syntax(('R/N', 'R/N', 'R'), ln, tokens)
 
         elif cmd == 'TEST':
-            check_syntax(('R/N', 'OP', 'R/N'), ln, tokens)
+            if len(tokens) == 2:
+                if tokens[1] != 'EOF':
+                    raise RuntimeError(
+                        'Unrecognized test {} on line {}'.format(
+                            tokens[1], line_num))
+            else:
+                check_syntax(('R/N', 'OP', 'R/N'), ln, tokens)
 
         elif cmd in JUMP_CMDS:
             check_syntax(('L',), ln, tokens)
@@ -81,6 +131,18 @@ def parse_program(statements):
                         'Duplicate label {} on line {}'.format(label, line_num))
                 labels[label] = i
 
+        elif cmd == 'GRAB':
+            check_syntax(('R/N',), ln, tokens)
+
+        elif cmd == 'FILE':
+            check_syntax(('R',), ln, tokens)
+
+        elif cmd == 'SEEK':
+            check_syntax(('R/N',), ln, tokens)
+
+        elif cmd == 'DROP':
+            check_syntax((), ln, tokens)
+
         else:
             raise RuntimeError('Unrecognized command {} on line {}'.format(
                 cmd, ln))
@@ -88,9 +150,13 @@ def parse_program(statements):
     return tokenized, labels
 
 
-def get_rn(val, registers):
+def get_rn(val, registers, current_file):
     if val in registers:
         return registers[val]
+    if val == 'F':
+        if not current_file:
+            raise RuntimeError('No open file')
+        return current_file.read()
     return int(val)
 
 
@@ -100,32 +166,41 @@ def dupe_registers(registers):
     return new_reg
 
 
-def run_statement(line_num, statement, program_counter, registers, labels):
+def run_statement(line_num, statement, program_counter, registers, labels, file_id, files):
     cmd = statement[0]
     registers = dupe_registers(registers)
 
     if cmd == 'COPY':
-        src = get_rn(statement[1], registers)
+        src = get_rn(statement[1], registers, files.get(file_id))
         dest = statement[2]
         registers[dest] = src
         program_counter += 1
 
     elif cmd in MATH_CMDS:
-        a = get_rn(statement[1], registers)
-        b = get_rn(statement[2], registers)
+        a = get_rn(statement[1], registers, files.get(file_id))
+        b = get_rn(statement[2], registers, files.get(file_id))
         dest = statement[3]
         op = OPERATORS[cmd]
         registers[dest] = op(a, b)
         program_counter += 1
 
     elif cmd == 'TEST':
-        a = get_rn(statement[1], registers)
-        op = OPERATORS[statement[2]]
-        b = get_rn(statement[3], registers)
-        if op(a, b):
-            registers['T'] = 1
+        if statement[1] == 'EOF':
+            if not file_id:
+                raise RuntimeError('Testing EOF without an open file on line {}'.format(
+                    line_num))
+            if files[file_id].at_eof():
+                registers['T'] = 1
+            else:
+                registers['T'] = 0
         else:
-            registers['T'] = 0
+            a = get_rn(statement[1], registers, files.get(file_id))
+            op = OPERATORS[statement[2]]
+            b = get_rn(statement[3], registers, files.get(file_id))
+            if op(a, b):
+                registers['T'] = 1
+            else:
+                registers['T'] = 0
         program_counter += 1
 
     elif cmd == 'JUMP':
@@ -149,36 +224,67 @@ def run_statement(line_num, statement, program_counter, registers, labels):
     elif cmd == 'MARK':
         program_counter += 1
 
+    elif cmd == 'GRAB':
+        file_id = get_rn(statement[1], registers, files.get(file_id))
+        program_counter += 1
+
+    elif cmd == 'DROP':
+        file_id = None
+        program_counter += 1
+
     else:
         raise NotImplementedError(cmd)
-    return program_counter, registers
+    return program_counter, registers, file_id
 
 
-def run_program(program, labels):
+def run_program(program, labels, files):
     program_counter = 0
     registers = {
         'T': 0,
         'X': 0,
     }
+    file_id = None
 
     while program_counter < len(program):
         line_num, statement = program[program_counter]
-        program_counter, registers = run_statement(
-            line_num, statement, program_counter, registers, labels)
+        program_counter, registers, file_id = run_statement(
+            line_num, statement, program_counter, registers, labels, file_id, files)
         print('{:3} {:20} T={:4} X={:4}'.format(
             line_num, ' '.join(statement), registers['T'], registers['X']))
 
-    return registers
+    return registers, files
+
+
+def load_data_file(file_id, file_handle):
+    content = []
+    for num, line in enumerate(file_handle):
+        try:
+            content.append(int(line.strip()))
+        except TypeError:
+            raise RuntimeError('Invalid integer {} on line {} of {}'.format(
+                line.strip(), num, filename))
+    return File(file_id, content)
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('program')
+    p.add_argument('-f', dest='files', action='append', default=[])
     args = p.parse_args()
 
     with open(args.program, 'r') as f:
         statements = f.readlines()
 
+    files = {}
+    for filename in args.files:
+        try:
+            file_id = int(os.path.basename(filename))
+        except TypeError:
+            raise RuntimeError('Invalid filename {}, must be an integer'.format(
+                filename))
+        with open(filename, 'r') as f:
+            files[file_id] = load_data_file(file_id, f)
+
     program, labels = parse_program(statements)
-    results = run_program(program, labels)
+    results, files = run_program(program, labels, files)
     print('\nT={T:4} X={X:4}'.format(**results))
