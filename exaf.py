@@ -10,6 +10,9 @@ OPERATORS = {
     'ADDI': operator.add,
     'MULI': operator.mul,
     'SUBI': operator.sub,
+    '>': operator.gt,
+    '<': operator.lt,
+    '=': operator.eq,
 }
 
 
@@ -32,6 +35,11 @@ def check_syntax(syntax, line_num, tokens):
                     raise RuntimeError(
                         'Expected register name or integer, found {} at position {} on line {}'.format(
                             tok, i, line_num))
+        elif syn == 'OP':
+            if tok not in OPERATORS:
+                raise RuntimeError(
+                    'Unrecognized operator {} at position {} on line {}, must be one of {}'.format(
+                        tok, i, line_num, list(OPERATORS.keys())))
         else:
             raise RuntimeError('Unknown syntax instruction {}'.format(syn))
 
@@ -52,6 +60,8 @@ def parse_program(statements):
             check_syntax(('R/N', 'R'), ln, tokens)
         elif cmd in MATH_CMDS:
             check_syntax(('R/N', 'R/N', 'R'), ln, tokens)
+        elif cmd == 'TEST':
+            check_syntax(('R/N', 'OP', 'R/N'), ln, tokens)
         else:
             raise RuntimeError('Unrecognized command {} on line {}'.format(
                 cmd, ln))
@@ -87,6 +97,16 @@ def run_statement(line_num, statement, program_counter, registers):
         dest = statement[3]
         op = OPERATORS[cmd]
         registers[dest] = op(a, b)
+        program_counter += 1
+
+    elif cmd == 'TEST':
+        a = get_rn(statement[1], registers)
+        op = OPERATORS[statement[2]]
+        b = get_rn(statement[3], registers)
+        if op(a, b):
+            registers['T'] = 1
+        else:
+            registers['T'] = 0
         program_counter += 1
 
     else:
