@@ -32,7 +32,6 @@ var factories = map[string]Factory{}
 // Register stores a factory associated with the name of the statement
 // it builds.
 func register(name string, factory Factory) {
-	fmt.Printf("Registering %s\n", name)
 	factories[name] = factory
 }
 
