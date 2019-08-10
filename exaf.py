@@ -14,6 +14,7 @@ OPERATORS = {
     'MULI': operator.mul,
     'SUBI': operator.sub,
     'MODI': operator.mod,
+    'DIVI': operator.floordiv,
     '>': operator.gt,
     '<': operator.lt,
     '=': operator.eq,
