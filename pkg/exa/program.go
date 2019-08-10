@@ -1,23 +1,78 @@
 package exa
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/statements"
 )
 
 // Program is a bunch of statements
-type Program []statements.Statement
+type Program struct {
+	statements []statements.Statement
+}
+
+// Load reads the contents of a file and creates a Program and returns
+// it with a mapping of any labels that have been marked.
+func Load(filename string) (*Program, error) {
+
+	fd, err := os.Open(filename)
+	defer fd.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	program := &Program{
+	}
+
+	lineNum := 0
+	statementNum := 0
+
+	input := bufio.NewScanner(fd)
+	for input.Scan() {
+
+		lineNum++
+
+		line := strings.Trim(input.Text(), " \t\n")
+		if line == "" {
+			continue
+		}
+		if line[0] == '#' {
+			continue
+		}
+
+		inStmt := statements.InputStatement{
+			LineNum: lineNum,
+			Line:    line,
+			Tokens:  strings.Fields(line),
+		}
+		newStatement, err := statements.Build(inStmt)
+		if err != nil {
+			return nil, err
+		}
+
+		program.statements = append(program.statements, newStatement)
+
+
+		statementNum++
+	}
+
+	return program, nil
+}
 
 // Run executes a program and returns the resulting state or any errors
-func (p Program) Run() (*interpreter.State, error) {
-	state := &interpreter.State{}
+func (p *Program) Run() (*interpreter.State, error) {
+	state := &interpreter.State{
+	}
 
 	for {
-		if state.Counter >= len(p) {
+		if state.Counter >= len(p.statements) {
 			break
 		}
-		nextStatement := p[state.Counter]
+		nextStatement := p.statements[state.Counter]
 		fmt.Printf("%-20s ", nextStatement)
 		if err := nextStatement.Do(state); err != nil {
 			return nil, err

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/loader"
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	program, err := loader.Load(programName)
+	program, err := exa.Load(programName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not load program: %s\n", err)
 		os.Exit(2)

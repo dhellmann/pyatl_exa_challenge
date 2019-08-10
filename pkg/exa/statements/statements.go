@@ -13,14 +13,13 @@ type Statement interface {
 
 // InputStatement holds a read and parsed input line
 type InputStatement struct {
-	LineNum      int
-	Line         string
-	Tokens       []string
-	StatementNum int
+	LineNum int
+	Line    string
+	Tokens  []string
 }
 
 func (i InputStatement) String() string {
-	return fmt.Sprintf("%3d: %-20s", i.StatementNum, i.Line)
+	return fmt.Sprintf("%3d: %s", i.LineNum, i.Line)
 }
 
 // Factory is a function for making a concrete statement from the
