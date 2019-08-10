@@ -53,6 +53,10 @@ func Load(fd io.Reader) (*Program, error) {
 		program.statements = append(program.statements, newStatement)
 
 		if inStmt.Tokens[0] == "MARK" {
+			if _, ok := program.labels[inStmt.Tokens[1]]; ok {
+				return nil, fmt.Errorf("Line %d: Duplicate label %q",
+					lineNum, inStmt.Tokens[1])
+			}
 			program.labels[inStmt.Tokens[1]] = statementNum
 		}
 
