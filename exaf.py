@@ -106,6 +106,8 @@ def run_program(program):
         print('{:3} {:20} T={:4} X={:4}'.format(
             line_num, ' '.join(statement), registers['T'], registers['X']))
 
+    return registers
+
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
@@ -117,3 +119,4 @@ if __name__ == '__main__':
 
     program = parse_program(statements)
     results = run_program(program)
+    print('\nT={T:4} X={X:4}'.format(**results))
