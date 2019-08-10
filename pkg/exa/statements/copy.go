@@ -12,6 +12,10 @@ type copyStatement struct {
 	input InputStatement
 }
 
+func (s *copyStatement) String() string {
+	return s.input.String()
+}
+
 func (s *copyStatement) Do(state *interpreter.State) error {
 	src, err := state.GetRegOrNum(s.input.Tokens[1])
 	if err != nil {

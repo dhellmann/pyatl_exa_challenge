@@ -13,6 +13,10 @@ type subiStatement struct {
 	input InputStatement
 }
 
+func (s *subiStatement) String() string {
+	return s.input.String()
+}
+
 func (*subiStatement) Do(state *interpreter.State) error {
 	return fmt.Errorf("NotImplemented: SUBI")
 }

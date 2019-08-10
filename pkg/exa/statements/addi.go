@@ -15,6 +15,10 @@ type addiStatement struct {
 
 func (*addiStatement) Do(state *interpreter.State) error {
 	return fmt.Errorf("NotImplemented: ADDI")
+func (s *addiStatement) String() string {
+	return s.input.String()
+}
+
 }
 
 // New builds an addiStatement from the input statement

@@ -13,6 +13,10 @@ type muliStatement struct {
 	input InputStatement
 }
 
+func (s *muliStatement) String() string {
+	return s.input.String()
+}
+
 func (*muliStatement) Do(state *interpreter.State) error {
 	return fmt.Errorf("NotImplemented: MULI")
 }
