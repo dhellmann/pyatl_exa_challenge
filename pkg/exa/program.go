@@ -9,12 +9,15 @@ import (
 type Program []statements.Statement
 
 // Run executes a program and returns the resulting state or any errors
-func (p Program) Run() (interpreter.State, error) {
-	state := interpreter.State{}
+func (p Program) Run() (*interpreter.State, error) {
+	state := &interpreter.State{}
 
 	for {
 		if state.Counter > len(p) {
 			break
+		}
+		if err := p[state.Counter].Do(state); err != nil {
+			return nil, err
 		}
 	}
 

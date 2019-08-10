@@ -2,11 +2,12 @@ package statements
 
 import (
 	"fmt"
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 )
 
 // Statement is the interface for individual commands
 type Statement interface {
-	Do() error
+	Do(*interpreter.State) error
 }
 
 // InputStatement holds a read and parsed input line

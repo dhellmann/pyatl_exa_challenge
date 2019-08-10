@@ -24,4 +24,10 @@ func main() {
 	}
 	fmt.Printf("got %d statements\n", len(program))
 	fmt.Printf("%v\n", program)
+	results, err := program.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to run program: %s\n", err)
+		os.Exit(3)
+	}
+	fmt.Printf("%v\n", results)
 }

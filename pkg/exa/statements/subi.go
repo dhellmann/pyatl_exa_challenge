@@ -2,6 +2,7 @@ package statements
 
 import (
 	"fmt"
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 )
 
 func init() {
@@ -12,7 +13,7 @@ type subiStatement struct {
 	input InputStatement
 }
 
-func (*subiStatement) Do() error {
+func (*subiStatement) Do(state *interpreter.State) error {
 	return fmt.Errorf("NotImplemented: SUBI")
 }
 

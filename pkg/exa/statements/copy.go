@@ -2,6 +2,7 @@ package statements
 
 import (
 	"fmt"
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 )
 
 func init() {
@@ -12,7 +13,7 @@ type copyStatement struct {
 	input InputStatement
 }
 
-func (*copyStatement) Do() error {
+func (*copyStatement) Do(state *interpreter.State) error {
 	return fmt.Errorf("NotImplemented: COPY")
 }
 

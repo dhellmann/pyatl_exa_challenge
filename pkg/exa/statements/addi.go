@@ -2,6 +2,7 @@ package statements
 
 import (
 	"fmt"
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 )
 
 func init() {
@@ -12,7 +13,7 @@ type addiStatement struct {
 	input InputStatement
 }
 
-func (*addiStatement) Do() error {
+func (*addiStatement) Do(state *interpreter.State) error {
 	return fmt.Errorf("NotImplemented: ADDI")
 }
 
