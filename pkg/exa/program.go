@@ -14,7 +14,7 @@ func (p Program) Run() (*interpreter.State, error) {
 	state := &interpreter.State{}
 
 	for {
-		if state.Counter > len(p) {
+		if state.Counter >= len(p) {
 			break
 		}
 		nextStatement := p[state.Counter]
