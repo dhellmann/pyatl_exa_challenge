@@ -21,11 +21,11 @@ func (s *subiStatement) Do(state *interpreter.State) error {
 	if err != nil {
 		return err
 	}
-	b, err := state.GetRegOrNum(s.input.Tokens[1])
+	b, err := state.GetRegOrNum(s.input.Tokens[2])
 	if err != nil {
 		return err
 	}
-	state.Store(a-b, s.input.Tokens[2])
+	state.Store(a-b, s.input.Tokens[3])
 	state.Counter++
 	return nil
 }
