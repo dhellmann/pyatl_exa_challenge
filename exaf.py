@@ -233,6 +233,8 @@ def run_statement(line_num, statement, program_counter, registers, labels, file_
 
     elif cmd == 'GRAB':
         file_id = get_rn(statement[1], registers, files.get(file_id))
+        if file_id not in files:
+            files[file_id] = File(file_id)
         program_counter += 1
 
     elif cmd == 'DROP':
