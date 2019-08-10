@@ -1,7 +1,6 @@
 package statements
 
 import (
-	"fmt"
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 )
 
@@ -17,8 +16,18 @@ func (s *muliStatement) String() string {
 	return s.input.String()
 }
 
-func (*muliStatement) Do(state *interpreter.State) error {
-	return fmt.Errorf("NotImplemented: MULI")
+func (s *muliStatement) Do(state *interpreter.State) error {
+	a, err := state.GetRegOrNum(s.input.Tokens[1])
+	if err != nil {
+		return err
+	}
+	b, err := state.GetRegOrNum(s.input.Tokens[1])
+	if err != nil {
+		return err
+	}
+	state.Store(a*b, s.input.Tokens[2])
+	state.Counter++
+	return nil
 }
 
 // New builds an muliStatement from the input statement
