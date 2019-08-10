@@ -40,6 +40,6 @@ func Build(inStmt InputStatement) (Statement, error) {
 	if factory, ok := factories[inStmt.Tokens[0]]; ok {
 		return factory(inStmt)
 	}
-	return nil, fmt.Errorf("Unrecognized statement: %s",
-		inStmt.Tokens[0])
+	return nil, fmt.Errorf("Unrecognized statement line %d: %s",
+		inStmt.LineNum, inStmt.Tokens[0])
 }
