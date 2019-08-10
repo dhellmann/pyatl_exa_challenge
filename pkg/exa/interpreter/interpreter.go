@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -14,6 +15,10 @@ type State struct {
 
 	// Counter is the program counter
 	Counter int
+}
+
+func (s *State) String() string {
+	return fmt.Sprintf("T=%4d X=%4d", s.T, s.X)
 }
 
 // GetRegOrNum returns the contents of a register or converts its
