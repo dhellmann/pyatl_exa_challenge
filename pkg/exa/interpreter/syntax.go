@@ -36,6 +36,16 @@ func CheckSyntax(syntax []string, tokens []string, lineNum int) error {
 			return fmt.Errorf("Line %d: Expected register name for argument %d got %q: %v",
 				lineNum, i, tok, tokens)
 
+		case "OP":
+			switch tok {
+			case "<":
+			case ">":
+			case "=":
+			default:
+				return fmt.Errorf("Line %d: Unknown operator %q as argument %d: %v",
+					lineNum, i, tok, tokens)
+			}
+
 		default:
 			return fmt.Errorf("Unknown syntax instruction %q", syn)
 		}
