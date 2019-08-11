@@ -21,7 +21,9 @@ func (s *copyStatement) Do(state *interpreter.State) error {
 	if err != nil {
 		return err
 	}
-	state.Store(src, s.input.Tokens[2])
+	if err = state.Store(src, s.input.Tokens[2]); err != nil {
+		return err
+	}
 	state.Counter++
 	return nil
 }

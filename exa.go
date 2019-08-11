@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa"
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/datafile"
 )
 
 func main() {
@@ -29,10 +30,23 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Could not load program: %s\n", err)
 		os.Exit(2)
 	}
-	results, err := program.Run()
+
+	dataFileNames := []string{}
+	for i := 1; i < flag.NArg(); i++ {
+		dataFileNames = append(dataFileNames, flag.Arg(i))
+	}
+
+	dataFiles, err := datafile.Load(dataFileNames)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load data file: %s\n", err)
+		os.Exit(3)
+	}
+	fmt.Printf("data files: %v\n", dataFiles)
+
+	results, err := program.Run(dataFiles)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to run program: %s\n", err)
-		os.Exit(3)
+		os.Exit(4)
 	}
 	fmt.Printf("%v\n", results)
 }

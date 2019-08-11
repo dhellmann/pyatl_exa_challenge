@@ -25,7 +25,9 @@ func (s *modiStatement) Do(state *interpreter.State) error {
 	if err != nil {
 		return err
 	}
-	state.Store(a%b, s.input.Tokens[3])
+	if err = state.Store(a%b, s.input.Tokens[3]); err != nil {
+		return err
+	}
 	state.Counter++
 	return nil
 }

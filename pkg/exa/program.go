@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/datafile"
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/interpreter"
 	"github.com/dhellmann/pyatl_exa_challenge/pkg/exa/statements"
 )
@@ -67,9 +68,10 @@ func Load(fd io.Reader) (*Program, error) {
 }
 
 // Run executes a program and returns the resulting state or any errors
-func (p *Program) Run() (*interpreter.State, error) {
+func (p *Program) Run(dataFiles map[int]datafile.File) (*interpreter.State, error) {
 	state := &interpreter.State{
 		Labels: p.labels,
+		Files:  dataFiles,
 	}
 
 	for {
