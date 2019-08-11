@@ -49,4 +49,10 @@ func main() {
 		os.Exit(4)
 	}
 	fmt.Printf("%v\n", results)
+	if len(dataFiles) > 0 {
+		fmt.Printf("Data files:\n")
+		for id, df := range dataFiles {
+			fmt.Printf("  %3d: %v\n", id, df)
+		}
+	}
 }
