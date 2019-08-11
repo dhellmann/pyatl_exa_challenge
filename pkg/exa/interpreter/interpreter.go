@@ -89,3 +89,11 @@ func (s *State) AtEOF() (bool, error) {
 	}
 	return s.currentFile.AtEOF(), nil
 }
+
+func (s *State) Seek(offset int) error {
+	if s.currentFile == nil {
+		return fmt.Errorf("No open file")
+	}
+	s.currentFile.Seek(offset)
+	return nil
+}

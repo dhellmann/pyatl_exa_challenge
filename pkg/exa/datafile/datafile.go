@@ -14,6 +14,7 @@ type File interface {
 	Read() (int, error)
 	Write(int) error
 	AtEOF() bool
+	Seek(int)
 }
 
 type dataFile struct {
@@ -47,6 +48,17 @@ func (df *dataFile) Write(val int) error {
 
 func (df *dataFile) AtEOF() bool {
 	return df.cursor+1 > len(df.content)
+}
+
+func (df *dataFile) Seek(offset int) {
+	dest := df.cursor + offset
+	if dest < 0 {
+		dest = 0
+	}
+	if dest > len(df.content) {
+		dest = len(df.content)
+	}
+	df.cursor = dest
 }
 
 func New(id int) File {
